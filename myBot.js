@@ -7,6 +7,8 @@ Never Change a running System!
 var email = '';
 var password = '';
 var game = '';
+var time=0;
+var log_new_reconnect=false;
 var readline = require('readline');
 var rl = readline.createInterface({
 	input: process.stdin,
@@ -35,10 +37,40 @@ client.on("message", function (msg) {
 	
 	// Hier könnte was passieren wenn Nachrichten eintreffen!
 });
+
 client.on('ready', function () {
-	console.log("BOT: --- :Up and running!");
-	console.log("BOT: --- :Commands: ");
-	console.log("BOT: --- : /game gamename");
+	time = Date.now();
+	log_new_reconnect=true;
+	console.log(time + " BOT: --- :Ready!");
+	console.log(time + " BOT: --- :Commands: ");
+	console.log(time + " BOT: --- : /game gamename");
+});
+
+client.on('disconnect', () => {
+	time = Date.now();
+	console.log(time + " BOT: --- :Disconnect!");
+	client.login(email,password);
+});
+client.on('reconnecting', () => {
+	if (log_new_reconnect) {
+		time = Date.now();
+		log_new_reconnect=false;
+		console.log(time + " BOT: --- :Reconnecting!");
+		client.login(email,password);
+	}
+});
+
+client.on('error', (error) => {
+	time = Date.now();
+	log_new_reconnect=false;
+	console.log(time + " BOT: --- :Error!");
+	console.log(time + " BOT: --- :" + error + "");
+});
+client.on('warn', (warning) => {
+	time = Date.now();
+	log_new_reconnect=false;
+	console.log(time + " BOT: --- :Warning!");
+	console.log(time + " BOT: --- :" + warning + "");
 });
 
 function do_login() {
