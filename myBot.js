@@ -7,6 +7,7 @@ Never Change a running System!
 var email = '';
 var password = '';
 var game = '';
+var tmp = "";
 var time=0;
 var log_new_reconnect=false;
 var readline = require('readline');
@@ -16,6 +17,14 @@ var rl = readline.createInterface({
 });
 var connect_state=0;
 
+var emoties=new Map([
+	["lenny", "( ͡° ͜ʖ ͡°)"],
+  ["shrug", "¯\\_(ツ)_/¯"],
+  ["justright", "✋😩👌"],
+  ["tableflip", "(╯°□°）╯︵ ┻━┻"],
+  ["unflip", "┬──┬﻿ ノ( ゜-゜ノ)"]
+]);
+
 var Discord = require("discord.js");
 var client = new Discord.Client();
 client.on("message", function (msg) {
@@ -23,16 +32,29 @@ client.on("message", function (msg) {
 		// Nicht deine nachricht, also ignorieren!
 		return;
 	}
-	const command_name = msg.content.split(" ")[0]; // Befehl
-	const params = msg.content.split(" ").slice(1); // Befehlsparameter
+	const command_name = msg.content.split(" ")[0]; 	// Befehl
+	const params = msg.content.split(" ").slice(1); 	// Befehlsparameter
+
+	var channel = msg.channel;
 	
 	var prefix = "/"; // Command Prefix
+	const command = command_name.replace(prefix, ""); // command_name ohne prefix
 	if(!msg.content.startsWith(prefix)) return; // Naja wenn deine Nachricht überhaupt kein Command ist...
 	
+	if (emoties.has(command)) {
+		msg.edit(emoties.get(command));
+		return;
+	}
 	if(command_name==prefix+"game") {
 		game=params.join(" ");
 		client.user.setStatus('online', game).then(user => {console.log("BOT: --- :Change Game to : "+game+"");}).catch(console.log);
 		msg.delete();
+	}
+
+	if (command_name==prefix+"speak") {
+		tmp=params.join(" ");
+		msg.delete();
+		channel.sendTTSMessage(tmp).then(user => {console.log("USER: TTS : "+tmp+"");}).catch(console.log);
 	}
 	
 	// Hier könnte was passieren wenn Nachrichten eintreffen!
@@ -44,6 +66,7 @@ client.on('ready', function () {
 	console.log(time + " BOT: --- :Ready!");
 	console.log(time + " BOT: --- :Commands: ");
 	console.log(time + " BOT: --- : /game gamename");
+	console.log(time + " BOT: --- : /speak text");
 });
 
 client.on('disconnect', () => {
