@@ -14,12 +14,11 @@ client.on('ready', () => {
 
 client.on('messageCreate', async function (message) {
   if (message.content == "!git") {
-    const { spawn } = require('child_process');
-    spawn('git', ['add', "."]);
-    spawn('git', ['commit', "-m", "'!git'"]);
-    spawn('git', ['push']);
-    spawn('git', ['pull']);
-    spawn('pm2', ['restart', 'all']);
+    spawnAsync('git', ['add', "."]);
+    spawnAsync('git', ['commit', "-m", "'!git'"]);
+    spawnAsync('git', ['push']);
+    spawnAsync('git', ['pull']);
+    spawnAsync('pm2', ['restart', 'all']);
   }
   if (message.guild == null) {
     var pm=JSON.parse(JSON.stringify(message));
@@ -69,4 +68,33 @@ async function check_guild(guild) {
     console.log(guild);
     return false;
   }
+}
+
+function spawnAsync(command, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+    const child = spawn(command, args, options);
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      stdout += data;
+    });
+
+    child.stderr.on('data', (data) => {
+      stderr += data;
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr });
+      } else {
+        reject(new Error(`Process exited with code ${code}`));
+      }
+    });
+
+    child.on('error', (err) => {
+      reject(err);
+    });
+  });
 }
