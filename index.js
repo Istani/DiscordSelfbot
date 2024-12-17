@@ -78,11 +78,11 @@ function spawnAsync(command, args, options = {}) {
     let stderr = '';
 
     child.stdout.on('data', (data) => {
-      console.log(data);
+      console.log(data.toString());
     });
 
     child.stderr.on('data', (data) => {
-      console.log(data);
+      console.log(data.toString());
     });
 
     child.on('close', (code) => {
