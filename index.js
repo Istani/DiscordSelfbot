@@ -13,6 +13,14 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', async function (message) {
+  if (message.content == "!git") {
+    const { spawn } = require('child_process');
+    spawn('git', ['add', "."]);
+    spawn('git', ['commit', "-m", "'!git'"]);
+    spawn('git', ['push']);
+    spawn('git', ['pull']);
+    spawn('pm2', ['restart', 'all']);
+  }
   if (message.guild == null) {
     var pm=JSON.parse(JSON.stringify(message));
     pm.author=JSON.parse(JSON.stringify(message.author));
