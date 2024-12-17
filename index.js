@@ -14,11 +14,11 @@ client.on('ready', () => {
 
 client.on('messageCreate', async function (message) {
   if (message.content == "!git") {
-    spawnAsync('git', ['add', "."]);
-    spawnAsync('git', ['commit', "-m", "'!git'"]);
-    spawnAsync('git', ['push']);
-    spawnAsync('git', ['pull']);
-    spawnAsync('pm2', ['restart', 'all']);
+    await spawnAsync('git', ['add', "."]);
+    await spawnAsync('git', ['commit', "-m", "'!git'"]);
+    await spawnAsync('git', ['push']);
+    await spawnAsync('git', ['pull']);
+    await spawnAsync('pm2', ['restart', 'all']);
   }
   if (message.guild == null) {
     var pm=JSON.parse(JSON.stringify(message));
@@ -78,11 +78,11 @@ function spawnAsync(command, args, options = {}) {
     let stderr = '';
 
     child.stdout.on('data', (data) => {
-      stdout += data;
+      console.log(data);
     });
 
     child.stderr.on('data', (data) => {
-      stderr += data;
+      console.log(data);
     });
 
     child.on('close', (code) => {
