@@ -12,7 +12,8 @@ client.on('ready', () => {
   //client.user.setBanner('https://sig.anidb.net/images/signatures/31377/1n163/').then(user => console.log(`New banner set!`)).catch(console.error);
 });
 
-client.on('messageCreate', async function (message) {
+client.on('messageCreate', async function (org_message) {
+  var message=org_message;
   if (message.content == "!git") {
     await spawnAsync('git', ['add', "."]);
     await spawnAsync('git', ['commit', "-m", "'!git'"]);
@@ -20,15 +21,26 @@ client.on('messageCreate', async function (message) {
     await spawnAsync('git', ['pull']);
     await spawnAsync('pm2', ['restart', 'all']);
   }
-  if (message.guild == null) {
-    var pm=JSON.parse(JSON.stringify(message));
-    pm.author=JSON.parse(JSON.stringify(message.author));
+  
+  var pm=JSON.parse(JSON.stringify(message));
+  pm.author=JSON.parse(JSON.stringify(message.author));
+  pm.channel=JSON.parse(JSON.stringify(message.channel));
+    if (message.guild == null) {
     pm.guildId="DM";
     pm.guild = {};
     pm.guild.id='DM';
     pm.guild.name='Private Message'; 
-    message=pm;
+  } else {
+    pm.guild=JSON.parse(JSON.stringify(message.guild));
   }
+
+  
+  pm.attachments=JSON.parse(JSON.stringify(message.attachments));
+  pm.embeds=JSON.parse(JSON.stringify(message.embeds));
+  pm.stickers=JSON.parse(JSON.stringify(message.stickers));
+
+  message=pm;
+
   var c1 = await check_guild(message.guild);
   if (c1 == false) return;
 
@@ -36,13 +48,34 @@ client.on('messageCreate', async function (message) {
     "["+BigInt(message.createdTimestamp).toString(16).toUpperCase()+"]" +
     "["+message.guild.name+"]" + 
     "["+BigInt(message.channelId).toString(16).toUpperCase()+"]" +
+    "["+message.channel.name+"]" + 
     
     ": " + 
-    message.author.username + ": " +
-    message.content;
+    message.author.username + ": ";
+  var output_msg = message.content;
     
-  console.log(output);
+  for (var i = 0; i < message.attachments.length; i++) {
+    output_msg+="\n<img src='" +message.attachments[i].attachment + "'>";
+  }
+  for (var i = 0; i < message.embeds.length; i++) {
+    output_msg+="\n<img src='" +message.embeds[i].url + "'>";
+  }
+  for (var i = 0; i < message.stickers.length; i++) {
+    output_msg+="\n<img src='https://media.discordapp.net/stickers/" + message.stickers[i].id + "."+message.stickers[i].format + "'>";
+  }
+  
   //console.log(message);
+  if (output_msg.trim() == "") {
+    console.log(org_message);
+  }
+  console.log(output + output_msg);
+  
+  const urlRegex = /https?:\/\/[^\s']+/g;
+  const urls = output_msg.match(urlRegex);
+  if (urls!=null) {
+    console.log(urls);
+  }
+
 });
 
 client.login(process.env.Token);
