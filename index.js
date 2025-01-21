@@ -13,69 +13,69 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', async function (org_message) {
-  var message=org_message;
-  if (message.content == "!git") {
-    await spawnAsync('git', ['add', "."]);
-    await spawnAsync('git', ['commit', "-m", "'!git'"]);
-    await spawnAsync('git', ['push']);
-    await spawnAsync('git', ['pull']);
-    await spawnAsync('pm2', ['restart', 'all']);
-  }
-  
-  var pm=JSON.parse(JSON.stringify(message));
-  pm.author=JSON.parse(JSON.stringify(message.author));
-  pm.channel=JSON.parse(JSON.stringify(message.channel));
-    if (message.guild == null) {
-    pm.guildId="DM";
-    pm.guild = {};
-    pm.guild.id='DM';
-    pm.guild.name='Private Message'; 
-  } else {
-    pm.guild=JSON.parse(JSON.stringify(message.guild));
-  }
-
-  
-  pm.attachments=JSON.parse(JSON.stringify(message.attachments));
-  pm.embeds=JSON.parse(JSON.stringify(message.embeds));
-  pm.stickers=JSON.parse(JSON.stringify(message.stickers));
-
-  message=pm;
-
-  var c1 = await check_guild(message.guild);
-  if (c1 == false) return;
-
-  var output=
-    "["+BigInt(message.createdTimestamp).toString(16).toUpperCase()+"]" +
-    "["+message.guild.name+"]" + 
-    "["+BigInt(message.channelId).toString(16).toUpperCase()+"]" +
-    "["+message.channel.name+"]" + 
+  try {
+    var message=org_message;
+    /*
+    if (message.content == "!git") {
+      await spawnAsync('git', ['add', "."]);
+      await spawnAsync('git', ['commit', "-m", "'!git'"]);
+      await spawnAsync('git', ['push']);
+      await spawnAsync('git', ['pull']);
+      await spawnAsync('pm2', ['restart', 'all']);
+    }
+    */
     
-    ": " + 
-    message.author.username + ": ";
-  var output_msg = message.content;
+    var pm=JSON.parse(JSON.stringify(message));
+    pm.author=JSON.parse(JSON.stringify(message.author));
+    pm.channel=JSON.parse(JSON.stringify(message.channel));
+      if (message.guild == null) {
+      pm.guildId="DM";
+      pm.guild = {};
+      pm.guild.id='DM';
+      pm.guild.name='Private Message'; 
+    } else {
+      pm.guild=JSON.parse(JSON.stringify(message.guild));
+    }
+    pm.attachments=JSON.parse(JSON.stringify(message.attachments));
+    pm.embeds=JSON.parse(JSON.stringify(message.embeds));
+    pm.stickers=JSON.parse(JSON.stringify(message.stickers));
+    message=pm;
+
+    var c1 = await check_guild(message.guild);
+    if (c1 == false) return;
+
+    var output=
+      "["+BigInt(message.createdTimestamp).toString(16).toUpperCase()+"]" +
+      "["+message.guild.name+"]" + 
+      "["+BigInt(message.channelId).toString(16).toUpperCase()+"]" +
+      "["+message.channel.name+"]:" + 
+      message.author.username + ": ";
+    var output_msg = message.content;
+      
+    for (var i = 0; i < message.attachments.length; i++) {
+      output_msg+="\n<img src='" +message.attachments[i].attachment + "'>";
+    }
+    for (var i = 0; i < message.embeds.length; i++) {
+      output_msg+="\n<img src='" +message.embeds[i].url + "'>";
+    }
+    for (var i = 0; i < message.stickers.length; i++) {
+      output_msg+="\n<img src='https://media.discordapp.net/stickers/" + message.stickers[i].id + "."+message.stickers[i].format + "'>";
+    }
     
-  for (var i = 0; i < message.attachments.length; i++) {
-    output_msg+="\n<img src='" +message.attachments[i].attachment + "'>";
-  }
-  for (var i = 0; i < message.embeds.length; i++) {
-    output_msg+="\n<img src='" +message.embeds[i].url + "'>";
-  }
-  for (var i = 0; i < message.stickers.length; i++) {
-    output_msg+="\n<img src='https://media.discordapp.net/stickers/" + message.stickers[i].id + "."+message.stickers[i].format + "'>";
-  }
-  
-  //console.log(message);
-  if (output_msg.trim() == "") {
+    //console.log(message);
+    if (output_msg.trim() == "") console.log(org_message);
+    console.log(output + output_msg);
+    
+    const urlRegex = /https?:\/\/[^\s']+/g;
+    const urls = output_msg.match(urlRegex);
+    if (urls!=null) {
+      console.log(urls);
+    }
+  } catch (e) {
+    console.log(e);
     console.log(org_message);
+    process.exit(1);
   }
-  console.log(output + output_msg);
-  
-  const urlRegex = /https?:\/\/[^\s']+/g;
-  const urls = output_msg.match(urlRegex);
-  if (urls!=null) {
-    console.log(urls);
-  }
-
 });
 
 client.login(process.env.Token);
