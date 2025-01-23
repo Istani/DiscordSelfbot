@@ -1,5 +1,6 @@
 var envpath = __dirname + '/.env';
 var config = require('dotenv').config({ path: envpath });
+var fs = require('fs');
 
 var Discord = require('discord.js-selfbot-v13');
 var client = new Discord.Client();
@@ -28,13 +29,16 @@ client.on('messageCreate', async function (org_message) {
     var pm=JSON.parse(JSON.stringify(message));
     pm.author=JSON.parse(JSON.stringify(message.author));
     pm.channel=JSON.parse(JSON.stringify(message.channel));
-      if (message.guild == null) {
+    if (message.guild == null) {
       pm.guildId="DM";
       pm.guild = {};
       pm.guild.id='DM';
       pm.guild.name='Private Message'; 
     } else {
       pm.guild=JSON.parse(JSON.stringify(message.guild));
+    }
+    if (typeof message.channel.name == undefined) {
+      pm.channel.name="DM";
     }
     pm.attachments=JSON.parse(JSON.stringify(message.attachments));
     pm.embeds=JSON.parse(JSON.stringify(message.embeds));
@@ -69,12 +73,16 @@ client.on('messageCreate', async function (org_message) {
     const urlRegex = /https?:\/\/[^\s']+/g;
     const urls = output_msg.match(urlRegex);
     if (urls!=null) {
-      console.log(urls);
+      //console.log(urls);
+      for (var i = 0; i < urls.length; i++) {
+        var downloadpath=__dirname + "/temp/" + message.id + "_" + i;
+        await downloadFile(urls[i], downloadpath);
+      }
     }
   } catch (e) {
     console.log(e);
     console.log(org_message);
-    process.exit(1);
+    //process.exit(1);
   }
 });
 
@@ -128,6 +136,30 @@ function spawnAsync(command, args, options = {}) {
 
     child.on('error', (err) => {
       reject(err);
+    });
+  });
+}
+
+
+async function downloadFile(url, destination) {
+  return new Promise((resolve, reject) => {
+    if (url.startsWith('https')) {
+      var http = require('https');
+    } else {
+      var http = require('http');
+    }
+
+    const file = fs.createWriteStream(destination);
+    http.get(url, (response) => {
+      if (response.statusCode >= 400) {
+        return reject(new Error(`Failed to download file: ${response.statusMessage}`));
+      }
+      response.pipe(file);
+      file.on('finish', () => {
+        file.close(() => resolve('File downloaded successfully '+ destination));
+      });
+    }).on('error', (err) => {
+      fs.unlink(destination, () => reject(err)); // Delete the file if an error occurs
     });
   });
 }
