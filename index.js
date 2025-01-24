@@ -1,12 +1,29 @@
 var envpath = __dirname + '/.env';
 var config = require('dotenv').config({ path: envpath });
 var fs = require('fs');
+var path = require('path');
+
+var axios = require('axios');
+var FormData = require('form-data');
 
 var Discord = require('discord.js-selfbot-v13');
 var client = new Discord.Client();
 
 var Datastore = require('@seald-io/nedb');
 var Guilds = new Datastore({ filename: 'data/guilds.json', autoload: true });
+
+// At Restart delete TempFolder
+var temp_dir="./temp";
+fs.readdir(temp_dir, (err, files) => {
+  if (err) throw err;
+  for (const file of files) {
+    if (file !== '.gitkeep') {
+      fs.unlink(temp_dir + "/" + file, err => {
+        if (err) throw err;
+      });
+    }
+  }
+});
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
@@ -16,7 +33,8 @@ client.on('ready', () => {
 client.on('messageCreate', async function (org_message) {
   try {
     var message=org_message;
-    /*
+    /* 
+    // Update/Pull Changes in Git
     if (message.content == "!git") {
       await spawnAsync('git', ['add', "."]);
       await spawnAsync('git', ['commit', "-m", "'!git'"]);
@@ -26,6 +44,7 @@ client.on('messageCreate', async function (org_message) {
     }
     */
     
+    // Modify Data to compareable JSON
     var pm=JSON.parse(JSON.stringify(message));
     pm.author=JSON.parse(JSON.stringify(message.author));
     pm.channel=JSON.parse(JSON.stringify(message.channel));
@@ -45,17 +64,19 @@ client.on('messageCreate', async function (org_message) {
     pm.stickers=JSON.parse(JSON.stringify(message.stickers));
     message=pm;
 
+    // Checking if this Message is something we care about
     var c1 = await check_guild(message.guild);
     if (c1 == false) return;
 
+
+    // Preparing Data for further software/debug
     var output=
       "["+BigInt(message.createdTimestamp).toString(16).toUpperCase()+"]" +
       "["+message.guild.name+"]" + 
       "["+BigInt(message.channelId).toString(16).toUpperCase()+"]" +
       "["+message.channel.name+"]:" + 
       message.author.username + ": ";
-    var output_msg = message.content;
-      
+    var output_msg = message.content; 
     for (var i = 0; i < message.attachments.length; i++) {
       output_msg+="\n<img src='" +message.attachments[i].attachment + "'>";
     }
@@ -65,24 +86,36 @@ client.on('messageCreate', async function (org_message) {
     for (var i = 0; i < message.stickers.length; i++) {
       output_msg+="\n<img src='https://media.discordapp.net/stickers/" + message.stickers[i].id + "."+message.stickers[i].format + "'>";
     }
-    
-    //console.log(message);
+    // Outputting Data:
     if (output_msg.trim() == "") console.log(org_message);
     console.log(output + output_msg);
     
+    // Check Data for URLs
     const urlRegex = /https?:\/\/[^\s']+/g;
     const urls = output_msg.match(urlRegex);
     if (urls!=null) {
-      //console.log(urls);
       for (var i = 0; i < urls.length; i++) {
         var downloadpath=__dirname + "/temp/" + message.id + "_" + i;
         await downloadFile(urls[i], downloadpath);
+
+        var upload_data = {
+          service: 'Discord',
+          jid: message.author.id + '@Discord',
+          tags: [
+            'Discord-Bot',
+            message.channel.name,
+            message.guild.name
+          ],
+          to: [
+            message.guild.id + '@Discord-Server'
+          ]
+        };
+        uploadFile(downloadpath, upload_data);
       }
     }
   } catch (e) {
     console.log(e);
     console.log(org_message);
-    //process.exit(1);
   }
 });
 
@@ -90,10 +123,8 @@ client.login(process.env.Token);
 
 
 async function check_guild(guild) {
-  //console.log(guild);
   try {
     var guild_obj={_id: guild.id, name: guild.name};
-    
     const guilds = await Guilds.findOneAsync({ _id: guild_obj._id });
     if (guilds==null) {
       console.log("Added Guild: "+guild_obj.name);
@@ -102,7 +133,6 @@ async function check_guild(guild) {
     } else {
       guild_obj=guilds;
     }
-    //console.log(guild_obj);
     return guild_obj.visible;
   } catch (e) {
     console.log(e);
@@ -140,7 +170,6 @@ function spawnAsync(command, args, options = {}) {
   });
 }
 
-
 async function downloadFile(url, destination) {
   return new Promise((resolve, reject) => {
     if (url.startsWith('https')) {
@@ -159,7 +188,56 @@ async function downloadFile(url, destination) {
         file.close(() => resolve('File downloaded successfully '+ destination));
       });
     }).on('error', (err) => {
-      fs.unlink(destination, () => reject(err)); // Delete the file if an error occurs
+      fs.unlink(destination, () => reject(err));
     });
   });
 }
+
+
+async function uploadFile(filePath, custom_data) {
+  var uploadUrl = "https://www.yours-mine.com/api/send"
+
+  //try {
+    if (!fs.existsSync(filePath)) {
+      throw new Error('File does not exist');
+    }
+
+    // Create a form data object
+    const form = new FormData();
+    form.append('filename', fs.createReadStream(filePath), {
+      filename: path.basename(filePath)
+    });
+
+    // ????
+    
+    Object.keys(custom_data).forEach(key => {
+      if (typeof custom_data[key] == "array") {
+        for (var i = 0; i < custom_data[key].length; i++) {
+          form.append(key+"["+i+"]", custom_data[key][i]);
+        }
+      } else {
+        form.append(key, custom_data[key]);
+      }
+      
+    });
+    
+
+    // Send POST request to upload URL
+    const response = await axios.post(uploadUrl, form, {
+      headers: {
+        ...form.getHeaders()
+      },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+    });
+
+    console.log('File uploaded successfully');
+    console.log('Server response:', response.data);
+  /*
+  } catch (error) {
+    console.error('Error uploading file:', error.message);
+  }
+  */
+}
+
+
