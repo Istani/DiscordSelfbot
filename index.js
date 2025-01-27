@@ -157,6 +157,34 @@ client.on('messageCreate', async function (org_message) {
 
 client.login(process.env.Token);
 
+function spawnAsync(command, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+    const child = spawn(command, args, options);
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      console.log(data.toString());
+    });
+
+    child.stderr.on('data', (data) => {
+      console.log(data.toString());
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr });
+      } else {
+        reject(new Error(`Process exited with code ${code}`));
+      }
+    });
+
+    child.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
 
 async function check_guild(guild) {
   try {
@@ -176,6 +204,30 @@ async function check_guild(guild) {
     return false;
   }
 }
+
+async function downloadFile(url, destination) {
+  return new Promise((resolve, reject) => {
+    if (url.startsWith('https')) {
+      var http = require('https');
+    } else {
+      var http = require('http');
+    }
+
+    const file = fs.createWriteStream(destination);
+    http.get(url, (response) => {
+      if (response.statusCode >= 400) {
+        return reject(new Error(`Failed to download file: ${response.statusMessage}`));
+      }
+      response.pipe(file);
+      file.on('finish', () => {
+        file.close(() => resolve('File downloaded successfully '+ destination));
+      });
+    }).on('error', (err) => {
+      fs.unlink(destination, () => reject(err));
+    });
+  });
+}
+
 async function uploadUser(custom_data) {
   var uploadUrl = "https://www.yours-mine.com/api/user"
 
@@ -206,59 +258,6 @@ async function uploadUser(custom_data) {
     console.error('Error uploading User:', error.message);
   }
 }
-
-function spawnAsync(command, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    const { spawn } = require('child_process');
-    const child = spawn(command, args, options);
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', (data) => {
-      console.log(data.toString());
-    });
-
-    child.stderr.on('data', (data) => {
-      console.log(data.toString());
-    });
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolve({ stdout, stderr });
-      } else {
-        reject(new Error(`Process exited with code ${code}`));
-      }
-    });
-
-    child.on('error', (err) => {
-      reject(err);
-    });
-  });
-}
-
-async function downloadFile(url, destination) {
-  return new Promise((resolve, reject) => {
-    if (url.startsWith('https')) {
-      var http = require('https');
-    } else {
-      var http = require('http');
-    }
-
-    const file = fs.createWriteStream(destination);
-    http.get(url, (response) => {
-      if (response.statusCode >= 400) {
-        return reject(new Error(`Failed to download file: ${response.statusMessage}`));
-      }
-      response.pipe(file);
-      file.on('finish', () => {
-        file.close(() => resolve('File downloaded successfully '+ destination));
-      });
-    }).on('error', (err) => {
-      fs.unlink(destination, () => reject(err));
-    });
-  });
-}
-
 
 async function uploadFile(filePath, custom_data) {
   var uploadUrl = "https://www.yours-mine.com/api/send"
