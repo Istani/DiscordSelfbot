@@ -12,6 +12,8 @@ var client = new Discord.Client();
 var Datastore = require('@seald-io/nedb');
 var Guilds = new Datastore({ filename: 'data/guilds.json', autoload: true });
 
+const service = "Discord";
+
 // At Restart delete TempFolder
 var temp_dir="./temp";
 fs.readdir(temp_dir, (err, files) => {
@@ -53,11 +55,9 @@ client.on('messageCreate', async function (org_message) {
       pm.guild = {};
       pm.guild.id='DM';
       pm.guild.name='Private Message'; 
+      pm.channel.name="DM";
     } else {
       pm.guild=JSON.parse(JSON.stringify(message.guild));
-    }
-    if (typeof message.channel.name == undefined) {
-      pm.channel.name="DM";
     }
     pm.attachments=JSON.parse(JSON.stringify(message.attachments));
     pm.embeds=JSON.parse(JSON.stringify(message.embeds));
@@ -67,7 +67,6 @@ client.on('messageCreate', async function (org_message) {
     // Checking if this Message is something we care about
     var c1 = await check_guild(message.guild);
     if (c1 == false) return;
-
 
     // Preparing Data for further software/debug
     var output=
@@ -98,17 +97,19 @@ client.on('messageCreate', async function (org_message) {
         var downloadpath=__dirname + "/temp/" + message.id + "_" + i;
         await downloadFile(urls[i], downloadpath);
 
+        if (message.guild.id=="DM") message.guild.id=client.user.tag;
         var upload_data = {
-          service: 'Discord',
-          jid: message.author.id + '@Discord',
+          service: service,
+          jid: message.author.id + '@' + service,
           tags: [
-            'Discord-Bot',
+            service+'-Bot',
             message.channel.name,
             message.guild.name
           ],
           to: [
-            message.guild.id + '@Discord-Server'
-          ]
+            message.guild.id + '@'+service+'-Server'
+          ],
+          message: ""
         };
         uploadFile(downloadpath, upload_data);
       }
@@ -197,7 +198,7 @@ async function downloadFile(url, destination) {
 async function uploadFile(filePath, custom_data) {
   var uploadUrl = "https://www.yours-mine.com/api/send"
 
-  //try {
+  try {
     if (!fs.existsSync(filePath)) {
       throw new Error('File does not exist');
     }
@@ -207,18 +208,14 @@ async function uploadFile(filePath, custom_data) {
     form.append('filename', fs.createReadStream(filePath), {
       filename: path.basename(filePath)
     });
-
-    // ????
-    
     Object.keys(custom_data).forEach(key => {
-      if (typeof custom_data[key] == "array") {
+      if (typeof custom_data[key] == "array" || typeof custom_data[key] == "object") {
         for (var i = 0; i < custom_data[key].length; i++) {
           form.append(key+"["+i+"]", custom_data[key][i]);
         }
       } else {
         form.append(key, custom_data[key]);
       }
-      
     });
     
 
@@ -232,12 +229,10 @@ async function uploadFile(filePath, custom_data) {
     });
 
     console.log('File uploaded successfully');
-    console.log('Server response:', response.data);
-  /*
+    fs.unlinkSync(filePath);
   } catch (error) {
     console.error('Error uploading file:', error.message);
   }
-  */
 }
 
 
