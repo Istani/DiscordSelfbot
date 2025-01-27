@@ -142,7 +142,7 @@ client.on('messageCreate', async function (org_message) {
         displayName: message.guild.name,
         global_name: "",
         id: message.guild.id,
-        avatar: message.guild.iconURL
+        avatar: message.author.avatar//message.guild.iconURL
       };
       await uploadUser(upload_data);
 
@@ -233,24 +233,34 @@ async function uploadUser(custom_data) {
 
   try {
     // Create a form data object
-    const form = new FormData();
-
+    //const form = new FormData();
+    var formBody = [];
     Object.keys(custom_data).forEach(key => {
       if (typeof custom_data[key] != "undefined") {
         if (typeof custom_data[key] == "array" || typeof custom_data[key] == "object") {
           for (var i = 0; i < custom_data[key].length; i++) {
-            form.append(key+"["+i+"]", custom_data[key][i]);
+            //form.append(key+"["+i+"]", custom_data[key][i]);
+            var encodedKey = encodeURIComponent(key+"["+i+"]");
+            var encodedValue = encodeURIComponent(custom_data[key][i]);
+            formBody.push(encodedKey + "=" + encodedValue);
           }
         } else {
-          form.append(key, custom_data[key]);
+          //form.append(key, custom_data[key]);
+          var encodedKey = encodeURIComponent(key);
+          var encodedValue = encodeURIComponent(custom_data[key]);
+          formBody.push(encodedKey + "=" + encodedValue);
         }
       }
     });
+    formBody = formBody.join("&");
     
     // Send POST request to upload URL
     const response = await fetch(uploadUrl, {
       method: 'POST',
-      body: form
+      body: formBody,//form,
+      headers: {
+        "Content-type": "application/x-www-form-urlencoded"
+      }
     }); 
 
     console.log('User uploaded successfully');
