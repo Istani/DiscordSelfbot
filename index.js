@@ -34,6 +34,7 @@ client.on('ready', () => {
 
 client.on('messageCreate', async function (org_message) {
   try {
+    var upload_data={};
     var message=org_message;
     /* 
     // Update/Pull Changes in Git
@@ -55,6 +56,7 @@ client.on('messageCreate', async function (org_message) {
       pm.guild = {};
       pm.guild.id='DM';
       pm.guild.name='Private Message'; 
+      pm.guild.iconURL=message.author.avatarURL;
       pm.channel.name="DM";
     } else {
       pm.guild=JSON.parse(JSON.stringify(message.guild));
@@ -67,6 +69,8 @@ client.on('messageCreate', async function (org_message) {
     // Checking if this Message is something we care about
     var c1 = await check_guild(message.guild);
     if (c1 == false) return;
+
+    fs.writeFileSync('temp/message.json', JSON.stringify(message, null, 2));
 
     // Preparing Data for further software/debug
     var output=
@@ -97,8 +101,10 @@ client.on('messageCreate', async function (org_message) {
         var downloadpath=__dirname + "/temp/" + message.id + "_" + i;
         await downloadFile(urls[i], downloadpath);
 
-        if (message.guild.id=="DM") message.guild.id=client.user.tag;
-        var upload_data = {
+        if (message.guild.id=="DM") {
+          message.guild.id=client.user.id;
+        }
+        upload_data = {
           service: service,
           jid: message.author.id + '@' + service,
           tags: [
@@ -111,9 +117,38 @@ client.on('messageCreate', async function (org_message) {
           ],
           message: ""
         };
-        uploadFile(downloadpath, upload_data);
+        await uploadFile(downloadpath, upload_data);
       }
+
+      // Adding User
+      upload_data = {
+        service: service,
+        jid: message.author.id + '@' + service,
+        username: message.author.username,
+        discriminator: message.author.discriminator,
+        displayName: message.author.username,
+        global_name: message.author.global_name,
+        id: message.author.id,
+        avatar: message.author.avatar
+      };
+      await uploadUser(upload_data);
+
+      // Adding Server
+      upload_data = {
+        service: service+'-Server',
+        jid: message.guild.id + '@'+service+'-Server',
+        username: message.guild.name,
+        discriminator: 0,
+        displayName: message.guild.name,
+        global_name: "",
+        id: message.guild.id,
+        avatar: message.guild.iconURL
+      };
+      await uploadUser(upload_data);
+
+      // iconURL - bannerURL
     }
+    
   } catch (e) {
     console.log(e);
     console.log(org_message);
@@ -139,6 +174,36 @@ async function check_guild(guild) {
     console.log(e);
     console.log(guild);
     return false;
+  }
+}
+async function uploadUser(custom_data) {
+  var uploadUrl = "https://www.yours-mine.com/api/user"
+
+  try {
+    // Create a form data object
+    const form = new FormData();
+
+    Object.keys(custom_data).forEach(key => {
+      if (typeof custom_data[key] != "undefined") {
+        if (typeof custom_data[key] == "array" || typeof custom_data[key] == "object") {
+          for (var i = 0; i < custom_data[key].length; i++) {
+            form.append(key+"["+i+"]", custom_data[key][i]);
+          }
+        } else {
+          form.append(key, custom_data[key]);
+        }
+      }
+    });
+    
+    // Send POST request to upload URL
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      body: form
+    }); 
+
+    console.log('User uploaded successfully');
+  } catch (error) {
+    console.error('Error uploading User:', error.message);
   }
 }
 
