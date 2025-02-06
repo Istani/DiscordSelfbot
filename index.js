@@ -87,6 +87,8 @@ client.on('messageCreate', async function (org_message) {
       output_msg+="\n<img src='" +message.embeds[i].url + "'>";
     }
     for (var i = 0; i < message.stickers.length; i++) {
+      message.stickers[i].format=message.stickers[i].format.toLowerCase();
+      if (message.stickers[i].format=="APNG") message.stickers[i].format="png"
       output_msg+="\n<img src='https://media.discordapp.net/stickers/" + message.stickers[i].id + "."+message.stickers[i].format + "'>";
     }
     // Outputting Data:
