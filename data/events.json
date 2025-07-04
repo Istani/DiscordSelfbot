@@ -1,0 +1,82 @@
+[
+  {
+    "id": "1376561689591414864",
+    "guildId": "1208814624842055741",
+    "channelId": null,
+    "creatorId": "1208814090005385338",
+    "name": "Polaris",
+    "description": "Anime, Manga, Gaming Convention",
+    "scheduledStartTimestamp": 1760097600000,
+    "scheduledEndTimestamp": 1760112000000,
+    "privacyLevel": "GUILD_ONLY",
+    "status": "SCHEDULED",
+    "entityType": "EXTERNAL",
+    "entityId": null,
+    "userCount": 2,
+    "creator": "1208814090005385338",
+    "entityMetadata": {
+      "location": "Hamburger Messehallen, Hallen B1-B4 + B7 und B5"
+    },
+    "image": "091d30e3a4f45a7d0de9fff2bee57616"
+  },
+  {
+    "id": "1381570419403784285",
+    "guildId": "1208814624842055741",
+    "channelId": null,
+    "creatorId": "1208814090005385338",
+    "name": "Prison Princess",
+    "description": "Finden wir einen Weg aus dem Dungeon?",
+    "scheduledStartTimestamp": 1752163200000,
+    "scheduledEndTimestamp": 1752166800000,
+    "privacyLevel": "GUILD_ONLY",
+    "status": "SCHEDULED",
+    "entityType": "EXTERNAL",
+    "entityId": null,
+    "userCount": 7,
+    "creator": "1208814090005385338",
+    "entityMetadata": {
+      "location": "http://twitch.tv/yukiwantssushi"
+    },
+    "image": null
+  },
+  {
+    "id": "1387329486571438120",
+    "guildId": "1208814624842055741",
+    "channelId": null,
+    "creatorId": "1208814090005385338",
+    "name": "VTuber Coffee Talk bei NaniNagi",
+    "description": "Ich bin zu Gast bei NaniNagi im Maid Cafe und stehe Rede und Antwort. Es wird sicher spicy!",
+    "scheduledStartTimestamp": 1752253200000,
+    "scheduledEndTimestamp": 1752256800000,
+    "privacyLevel": "GUILD_ONLY",
+    "status": "SCHEDULED",
+    "entityType": "EXTERNAL",
+    "entityId": null,
+    "userCount": 2,
+    "creator": "1208814090005385338",
+    "entityMetadata": {
+      "location": "https://www.twitch.tv/naninagi"
+    },
+    "image": "564beaa31da1ad1bda8572812072f5d8"
+  },
+  {
+    "id": "1389161179238109204",
+    "guildId": "1208814624842055741",
+    "channelId": null,
+    "creatorId": "1208814090005385338",
+    "name": "Tanabata - Japanisches Sternfest",
+    "description": "Ihr könnt mir eure Wünsche schicken, ich schreibe sie auf bunte Papierzettel und hänge sie in den Bambus in meinem Garten.",
+    "scheduledStartTimestamp": 1751803200000,
+    "scheduledEndTimestamp": 1751810400000,
+    "privacyLevel": "GUILD_ONLY",
+    "status": "SCHEDULED",
+    "entityType": "EXTERNAL",
+    "entityId": null,
+    "userCount": 3,
+    "creator": "1208814090005385338",
+    "entityMetadata": {
+      "location": "https://twitch.tv/yukiwantssushi"
+    },
+    "image": "b330b116d5a9e4031bb0db7b43a79200"
+  }
+]
