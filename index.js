@@ -29,6 +29,7 @@ fs.readdir(temp_dir, (err, files) => {
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
+  post_new_image();
   //client.user.setBanner('https://sig.anidb.net/images/signatures/31377/1n163/').then(user => console.log(`New banner set!`)).catch(console.error);
 });
 
@@ -255,7 +256,7 @@ async function uploadUser(custom_data) {
       }
     });
     formBody = formBody.join("&");
-    
+
     // Send POST request to upload URL
     const response = await fetch(uploadUrl, {
       method: 'POST',
@@ -263,7 +264,7 @@ async function uploadUser(custom_data) {
       headers: {
         "Content-type": "application/x-www-form-urlencoded"
       }
-    }); 
+    });
 
     console.log('User uploaded successfully');
   } catch (error) {
@@ -273,6 +274,11 @@ async function uploadUser(custom_data) {
 
 async function uploadFile(filePath, custom_data) {
   var uploadUrl = "https://www.yours-mine.com/api/send"
+
+  console.log("filepath: ");
+  console.log(filePath);
+  console.log("Custom data: ");
+  console.log(custom_data);
 
   try {
     if (!fs.existsSync(filePath)) {
@@ -293,7 +299,6 @@ async function uploadFile(filePath, custom_data) {
         form.append(key, custom_data[key]);
       }
     });
-    
 
     // Send POST request to upload URL
     const response = await axios.post(uploadUrl, form, {
@@ -312,3 +317,52 @@ async function uploadFile(filePath, custom_data) {
 }
 
 
+const cron = require('node-cron');
+const { debug } = require('console');
+cron.schedule('0 9 * * *', async () => {
+  // Yuki Sepcial?
+  post_new_image();
+});
+
+
+async function post_new_image() {
+  // 
+
+  var streamfiles=[];
+  var folder=path.join(__dirname, "data");
+  var files =fs.readdirSync(folder);
+  for (var i = 0; i < files.length; i++) {
+    if (files[i].startsWith("stream_")) {
+      streamfiles.push(path.join(folder, files[i]));
+    }
+  }
+
+  if (streamfiles.length>0) {
+    await client.channels.cache.get("1253250208385470544").send({
+      content: "🤖 Sponsored by Mister Biiru",
+      files: streamfiles
+    });
+    for (var i = 0; i < streamfiles.length; i++) {
+      fs.unlinkSync(streamfiles[i]);
+    }
+  }
+  
+}
+
+cron.schedule('*/15 * * * *', async () => {
+  // Yuki Sepcial?
+  get_new_events();
+});
+
+async function get_new_events() {
+  console.log("Event-Abfrage");
+  client.guilds.cache.get("1208814624842055741").scheduledEvents.fetch().then(events => {
+    var folder=path.join(__dirname, "data", "events.json");
+    fs.writeFileSync(folder, JSON.stringify(events, null, 2));
+    /*
+    events.forEach(event => {
+      console.log(event.scheduledStartAt + " : " + event.name);
+    });
+    */
+  });
+}

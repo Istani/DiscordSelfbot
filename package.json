@@ -1,5 +1,5 @@
 {
-  "name": "@istani/discrodselfbot",
+  "name": "@istani/discrodselfbot3",
   "version": "1.0.0",
   "scripts": {
     "start": "node index.js"
@@ -21,6 +21,7 @@
     "axios": "^1.7.9",
     "discord.js-selfbot-v13": "^3.4.5",
     "dotenv": "^16.4.7",
-    "form-data": "^4.0.1"
+    "form-data": "^4.0.1",
+    "node-cron": "^4.1.0"
   }
 }
